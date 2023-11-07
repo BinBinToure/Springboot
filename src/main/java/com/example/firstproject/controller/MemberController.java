@@ -10,6 +10,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 
@@ -37,7 +38,7 @@ public class MemberController {
         Member saved = memberRepository.save(member);
         log.info(saved.toString());
         // System.out.println(saved.toString());
-        return "";
+        return "redirect:/members/" + saved.getId();
     }
 
     @GetMapping("/members/{id}")
@@ -45,7 +46,7 @@ public class MemberController {
 
         Member member = memberRepository.findById(id).orElse(null);
         model.addAttribute("member", member);
-        return "members/new";
+        return "members/show";
     }
 
     @GetMapping("/members")
@@ -54,5 +55,36 @@ public class MemberController {
         List<Member> memberList = memberRepository.findAll();
         model.addAttribute("memberList", memberList);
         return "members/index";
+    }
+
+    @GetMapping("/members/{id}/edit")
+    public String edit(@PathVariable Long id, Model model) {
+
+        Member member = memberRepository.findById(id).orElse(null);
+        model.addAttribute("member", member);
+        return "members/edit";
+    }
+
+    @PostMapping("/members/update")
+    public String update(MemberForm form) {
+
+        log.info(form.toString());
+        Member member = form.toEntity();
+        Member target = memberRepository.findById(member.getId()).orElse(null);
+        if(target != null) {
+            memberRepository.save(member);
+        }
+        return "redirect:/members/" + member.getId();
+    }
+
+    @GetMapping("/members/{id}/delete")
+    public String delete(@PathVariable Long id, RedirectAttributes rttr) {
+
+        Member target = memberRepository.findById(id).orElse(null);
+        if (target != null) {
+            memberRepository.delete(target);
+            rttr.addFlashAttribute("msg", "삭제 완료!");
+        }
+        return "redirect:/members";
     }
 }
